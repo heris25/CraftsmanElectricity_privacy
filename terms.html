@@ -5,25 +5,45 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>전기기능사 해설집 — 이용약관</title>
 <style>
-  :root { color-scheme: light dark; }
+  /* 색상 모드 — 앱 안에서 열리면 아래 스크립트가 html에 theme- 클래스를 붙인다.
+     웹에서 직접 열면 클래스가 없어 prefers-color-scheme(맨 아래)이 적용된다. */
+  :root { color-scheme: light dark;
+          --bg:#fff; --text:#222; --muted:#888; --line:#ccc; --thead:#f4f4f4; --link:#2F5FD0; }
+  html.theme-study { --bg:#F4F6FA; --text:#1E2430; --muted:#7A8394; --line:#DFE4EE; --thead:#fff; --link:#2F5FD0; }
+  html.theme-paper { --bg:#FAF7F0; --text:#3B3128; --muted:#8A7E6F; --line:#E7DFD2; --thead:#FFFDF8; --link:#B45816; }
+  html.theme-dark  { --bg:#121A2B; --text:#E8ECF4; --muted:#939DB0; --line:#2B3850; --thead:#1B2537; --link:#FFC533; }
+  html { background: var(--bg); }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Malgun Gothic", "Apple SD Gothic Neo", sans-serif;
     max-width: 720px;
     margin: 0 auto;
     padding: 24px 20px 60px;
     line-height: 1.7;
-    color: #222;
-    background: #fff;
+    color: var(--text);
+    background: var(--bg);
   }
-  @media (prefers-color-scheme: dark) {
-    body { color: #ddd; background: #121212; }
-    a { color: #8ab4f8; }
-  }
-  h1 { font-size: 1.5rem; border-bottom: 2px solid #888; padding-bottom: 8px; }
+  a { color: var(--link); }
+  h1 { font-size: 1.5rem; border-bottom: 2px solid var(--line); padding-bottom: 8px; }
   h2 { font-size: 1.15rem; margin-top: 2em; }
   ul { padding-left: 1.4em; }
-  .meta { color: #888; font-size: 0.9rem; }
+  .meta { color: var(--muted); font-size: 0.9rem; }
+  /* 앱 밖(웹)에서 열렸을 때만 OS 다크 모드를 따른다 */
+  @media (prefers-color-scheme: dark) {
+    html:not([class*="theme-"]) {
+      --bg:#121212; --text:#ddd; --muted:#999; --line:#444; --thead:#1e1e1e; --link:#8ab4f8;
+    }
+  }
 </style>
+<script>
+(function () {
+  // 앱은 이 페이지를 iframe으로 띄운다 — 그때만 앱의 색상 모드를 따라간다.
+  var embedded; try { embedded = window.self !== window.top; } catch (e) { embedded = true; }
+  if (!embedded) return;
+  var m = 'study';
+  try { m = localStorage.getItem('colorMode') || 'study'; } catch (e) {}
+  document.documentElement.className = 'theme-' + m;
+})();
+</script>
 </head>
 <body>
 
