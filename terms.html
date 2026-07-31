@@ -36,12 +36,17 @@
 </style>
 <script>
 (function () {
-  // 앱은 이 페이지를 iframe으로 띄운다 — 그때만 앱의 색상 모드를 따라간다.
+  // 앱은 이 페이지를 iframe으로 띄운다 — 그때만 앱의 색상 모드·글자 크기를 따라간다.
   var embedded; try { embedded = window.self !== window.top; } catch (e) { embedded = true; }
   if (!embedded) return;
-  var m = 'study';
-  try { m = localStorage.getItem('colorMode') || 'study'; } catch (e) {}
+  var m = 'study', fs = '4';
+  try {
+    m = localStorage.getItem('colorMode') || 'study';
+    fs = localStorage.getItem('fontScale') || '4';
+  } catch (e) {}
   document.documentElement.className = 'theme-' + m;
+  var px = { 1: '14px', 2: '16px', 3: '18px', 4: '20px' }[fs];
+  if (px) document.documentElement.style.fontSize = px;
 })();
 </script>
 </head>
@@ -61,8 +66,9 @@
   <li>학습 보조 도구(계산기, 메모장) 제공</li>
   <li>서비스 유지를 위한 광고(Google AdMob) 게재</li>
 </ul>
-<p>회원가입이나 로그인 없이 이용할 수 있으며, 학습 기록 등 이용 정보는 이용자 기기
-내부에만 저장됩니다.</p>
+<p>회원가입이나 로그인 없이 이용할 수 있으며, 학습 기록·메모·앱 설정은 이용자 기기
+내부에만 저장됩니다. 앱 개선을 위한 이용 통계와 광고 게재에 필요한 정보는 별도로 수집되며,
+자세한 내용은 <a href="privacy-policy.html">개인정보처리방침</a>을 참고하세요.</p>
 
 <h2>2. 광고 및 광고 제거권</h2>
 <ul>

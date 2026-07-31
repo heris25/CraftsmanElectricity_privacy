@@ -39,19 +39,24 @@
 </style>
 <script>
 (function () {
-  // 앱은 이 페이지를 iframe으로 띄운다 — 그때만 앱의 색상 모드를 따라간다.
+  // 앱은 이 페이지를 iframe으로 띄운다 — 그때만 앱의 색상 모드·글자 크기를 따라간다.
   var embedded; try { embedded = window.self !== window.top; } catch (e) { embedded = true; }
   if (!embedded) return;
-  var m = 'study';
-  try { m = localStorage.getItem('colorMode') || 'study'; } catch (e) {}
+  var m = 'study', fs = '4';
+  try {
+    m = localStorage.getItem('colorMode') || 'study';
+    fs = localStorage.getItem('fontScale') || '4';
+  } catch (e) {}
   document.documentElement.className = 'theme-' + m;
+  var px = { 1: '14px', 2: '16px', 3: '18px', 4: '20px' }[fs];
+  if (px) document.documentElement.style.fontSize = px;
 })();
 </script>
 </head>
 <body>
 
 <h1>전기기능사 해설집 — 오픈소스 라이선스</h1>
-<p class="meta">갱신일: 2026년 7월 24일<br>
+<p class="meta">갱신일: 2026년 8월 1일<br>
 적용 대상: Android 앱 「전기기능사 해설집」 (패키지명: com.appsbyhc.craftsmanelectricity)</p>
 
 <p>본 앱은 아래의 오픈소스 소프트웨어를 사용하여 만들어졌습니다.
@@ -66,9 +71,15 @@
   <tr><td>@capacitor/app</td>
       <td>앱 상태·뒤로가기 버튼 처리 플러그인</td>
       <td><a href="https://github.com/ionic-team/capacitor-plugins/blob/main/LICENSE">MIT</a></td></tr>
+  <tr><td>@capacitor/local-notifications</td>
+      <td>학습 알림(기기 내 로컬 알림) 예약·발송 플러그인</td>
+      <td><a href="https://github.com/ionic-team/capacitor-plugins/blob/main/LICENSE">MIT</a></td></tr>
   <tr><td>@capacitor-community/admob</td>
       <td>Google AdMob 광고 연동 플러그인</td>
       <td><a href="https://github.com/capacitor-community/admob/blob/master/LICENSE">MIT</a></td></tr>
+  <tr><td>@capacitor-firebase/analytics</td>
+      <td>앱 이용 통계(Firebase Analytics) 연동 플러그인</td>
+      <td><a href="https://github.com/capawesome-team/capacitor-firebase/blob/main/LICENSE">Apache License 2.0</a></td></tr>
   <tr><td>AndroidX 라이브러리<br>(appcompat, coordinatorlayout, core-splashscreen, webkit 등)</td>
       <td>Android 앱 구동 기반 라이브러리</td>
       <td><a href="https://www.apache.org/licenses/LICENSE-2.0">Apache License 2.0</a></td></tr>
@@ -78,10 +89,19 @@
 </table>
 
 <h2>2. 제3자 SDK</h2>
-<p>본 앱은 광고 게재를 위해 <strong>Google Mobile Ads SDK(AdMob)</strong>를 사용합니다.
-해당 SDK는 오픈소스가 아니며
-<a href="https://developers.google.com/admob/terms">Google AdMob 이용약관</a> 및
-<a href="https://policies.google.com/privacy?hl=ko">Google 개인정보처리방침</a>이 적용됩니다.</p>
+<p>본 앱은 아래의 제3자 SDK를 사용합니다. <strong>두 SDK는 오픈소스가 아니며</strong>
+각각의 이용약관과 Google 개인정보처리방침이 적용됩니다.</p>
+<ul>
+  <li><strong>Google Mobile Ads SDK(AdMob)</strong> — 광고 게재.
+      <a href="https://developers.google.com/admob/terms">AdMob 이용약관</a></li>
+  <li><strong>Google Analytics for Firebase SDK</strong>
+      (<code>com.google.firebase:firebase-analytics</code>) — 앱 이용 통계.
+      <a href="https://firebase.google.com/terms">Firebase 이용약관</a> ·
+      <a href="https://firebase.google.com/support/privacy">데이터 처리 안내</a></li>
+</ul>
+<p>두 SDK가 수집하는 정보와 그 처리 방식은
+<a href="privacy-policy.html">개인정보처리방침</a>에 자세히 적어 두었습니다.
+공통 적용: <a href="https://policies.google.com/privacy?hl=ko">Google 개인정보처리방침</a></p>
 
 <h2>3. 라이선스 전문</h2>
 <p><strong>MIT License</strong></p>
