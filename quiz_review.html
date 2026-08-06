@@ -1,0 +1,994 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="light">
+  <title>퀴즈 문항 검토실 · 10문항 테스트</title>
+  <style>
+    :root {
+      --ink: #172033;
+      --muted: #657089;
+      --line: #dce2ec;
+      --panel: #ffffff;
+      --canvas: #f4f6fa;
+      --navy: #19324d;
+      --blue: #2e64d7;
+      --blue-soft: #eaf1ff;
+      --agree: #14805e;
+      --agree-soft: #e7f6f0;
+      --disagree: #c44646;
+      --disagree-soft: #fdecec;
+      --warning: #a85f00;
+      --shadow: 0 18px 48px rgba(29, 48, 79, 0.10);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(75, 111, 201, 0.13), transparent 30rem),
+        var(--canvas);
+      font-family: Pretendard, "Noto Sans KR", "Apple SD Gothic Neo", system-ui, sans-serif;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    button, input, select { font: inherit; }
+    button { cursor: pointer; }
+
+    .app-shell {
+      width: min(1320px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 48px;
+    }
+
+    .topbar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 22px;
+    }
+
+    .eyebrow {
+      margin: 0 0 8px;
+      color: var(--blue);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: .13em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      margin: 0;
+      color: var(--navy);
+      font-size: clamp(28px, 4vw, 44px);
+      letter-spacing: -.045em;
+      line-height: 1.08;
+    }
+
+    .subtitle {
+      max-width: 700px;
+      margin: 12px 0 0;
+      color: var(--muted);
+      line-height: 1.65;
+    }
+
+    .file-actions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px;
+      min-width: 330px;
+    }
+
+    .source-loader {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 10px;
+      padding: 16px;
+      margin-bottom: 18px;
+      border: 1px solid rgba(197, 207, 223, .9);
+      border-radius: 16px;
+      background: rgba(255, 255, 255, .88);
+    }
+
+    .source-loader label {
+      grid-column: 1 / -1;
+      color: var(--navy);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .source-loader input {
+      min-width: 0;
+      height: 46px;
+      padding: 0 14px;
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    .source-hint {
+      grid-column: 1 / -1;
+      margin: 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+    }
+
+    .mobile-file-row {
+      display: none;
+      grid-column: 1 / -1;
+    }
+
+    .source-loader .mobile-file-row label {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      min-height: 50px;
+      color: var(--navy);
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .btn {
+      min-height: 44px;
+      padding: 0 16px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      color: var(--navy);
+      background: #fff;
+      font-weight: 750;
+      transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+
+    .btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 20px rgba(29, 48, 79, .10); }
+    .btn:focus-visible { outline: 3px solid rgba(46, 100, 215, .28); outline-offset: 2px; }
+    .btn:disabled { cursor: not-allowed; opacity: .45; }
+    .btn.primary { color: #fff; border-color: var(--blue); background: var(--blue); }
+    .btn.ghost { background: rgba(255, 255, 255, .65); }
+
+    .status-panel {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 22px;
+      align-items: center;
+      padding: 18px 20px;
+      margin-bottom: 18px;
+      border: 1px solid rgba(197, 207, 223, .85);
+      border-radius: 18px;
+      background: rgba(255, 255, 255, .88);
+      box-shadow: 0 10px 30px rgba(29, 48, 79, .06);
+      backdrop-filter: blur(10px);
+    }
+
+    .progress-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 10px;
+      font-size: 14px;
+      font-weight: 750;
+    }
+
+    .progress-head span:last-child { color: var(--muted); }
+
+    .progress-track {
+      height: 10px;
+      overflow: hidden;
+      border-radius: 99px;
+      background: #e9edf4;
+    }
+
+    .progress-bar {
+      width: 0;
+      height: 100%;
+      border-radius: inherit;
+      background: linear-gradient(90deg, var(--blue), #6292ef);
+      transition: width .25s ease;
+    }
+
+    .counts { display: flex; gap: 8px; flex-wrap: wrap; }
+    .count-pill {
+      padding: 8px 12px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 750;
+      background: #eef1f6;
+      color: var(--muted);
+    }
+    .count-pill.agree { color: var(--agree); background: var(--agree-soft); }
+    .count-pill.disagree { color: var(--disagree); background: var(--disagree-soft); }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .filter-group { display: flex; gap: 8px; flex-wrap: wrap; }
+    .filter-btn {
+      padding: 9px 13px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--muted);
+      background: rgba(255, 255, 255, .78);
+      font-weight: 700;
+    }
+    .filter-btn.active { color: var(--blue); border-color: #9db8ef; background: var(--blue-soft); }
+
+    .toolbar-right { display: flex; align-items: center; gap: 14px; }
+    .auto-next { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 14px; font-weight: 650; }
+    .auto-next input { width: 17px; height: 17px; accent-color: var(--blue); }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 280px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .question-card {
+      min-height: 590px;
+      padding: clamp(22px, 4vw, 42px);
+      border: 1px solid rgba(197, 207, 223, .9);
+      border-radius: 24px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+
+    .question-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 28px;
+    }
+
+    .question-number { color: var(--blue); font-weight: 850; letter-spacing: -.02em; }
+    .row-id { color: var(--muted); font-size: 13px; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 26px; }
+    .chip {
+      padding: 7px 10px;
+      border-radius: 9px;
+      color: #4f5c73;
+      background: #f0f3f8;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .chip.fit { color: #744a00; background: #fff4d8; }
+    .chip.recommend { color: #28519c; background: #eaf1ff; }
+    .chip.match-o { color: var(--agree); background: var(--agree-soft); }
+    .chip.match-x { color: var(--disagree); background: var(--disagree-soft); }
+
+    .question-label {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: .08em;
+    }
+
+    .question-text {
+      margin: 0;
+      min-height: 128px;
+      color: #111c2d;
+      font-size: clamp(24px, 3.1vw, 38px);
+      font-weight: 780;
+      line-height: 1.38;
+      letter-spacing: -.035em;
+      word-break: keep-all;
+    }
+
+    .reason-box {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 12px;
+      align-items: start;
+      padding: 16px 18px;
+      margin: 28px 0;
+      border-radius: 14px;
+      background: #f5f7fb;
+      color: #445067;
+      line-height: 1.55;
+    }
+
+    .reason-box strong { color: var(--navy); white-space: nowrap; }
+
+    .reason-box.recommendation {
+      margin-bottom: 12px;
+      border: 1px solid #cfdcf5;
+      background: var(--blue-soft);
+    }
+    .reason-box.recommendation.use { border-color: #b9dfd2; background: var(--agree-soft); }
+    .reason-box.recommendation.skip { border-color: #f0c7c7; background: var(--disagree-soft); }
+
+    .decision-area {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 20px;
+    }
+
+    .decision-btn {
+      min-height: 74px;
+      border: 2px solid transparent;
+      border-radius: 16px;
+      font-size: 18px;
+      font-weight: 850;
+      transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease;
+    }
+    .decision-btn:hover { transform: translateY(-2px); }
+    .decision-btn.agree { color: var(--agree); background: var(--agree-soft); }
+    .decision-btn.disagree { color: var(--disagree); background: var(--disagree-soft); }
+    .decision-btn.agree.selected { border-color: var(--agree); box-shadow: 0 8px 22px rgba(20, 128, 94, .15); }
+    .decision-btn.disagree.selected { border-color: var(--disagree); box-shadow: 0 8px 22px rgba(196, 70, 70, .15); }
+    .shortcut { display: block; margin-top: 4px; opacity: .7; font-size: 12px; font-weight: 700; }
+
+    .side-panel {
+      position: sticky;
+      top: 18px;
+      padding: 20px;
+      border: 1px solid rgba(197, 207, 223, .9);
+      border-radius: 20px;
+      background: rgba(255, 255, 255, .9);
+      box-shadow: 0 12px 30px rgba(29, 48, 79, .07);
+    }
+
+    .side-panel h2 { margin: 0 0 16px; color: var(--navy); font-size: 16px; }
+    .jump-form { display: flex; gap: 8px; }
+    .jump-form input {
+      width: 100%;
+      min-width: 0;
+      height: 42px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      color: var(--ink);
+      background: #fff;
+    }
+
+    .nav-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0 20px; }
+    .nav-row .btn { min-width: 0; padding: 0 10px; }
+
+    .key-help {
+      padding-top: 18px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.8;
+    }
+    kbd { padding: 2px 6px; border: 1px solid #cfd6e2; border-bottom-width: 2px; border-radius: 5px; background: #fff; color: var(--navy); font-family: inherit; font-weight: 800; }
+
+    .empty-state {
+      display: grid;
+      place-items: center;
+      min-height: 420px;
+      padding: 36px;
+      text-align: center;
+    }
+    .empty-state h2 { margin: 0 0 10px; color: var(--navy); }
+    .empty-state p { max-width: 520px; margin: 0; color: var(--muted); line-height: 1.65; }
+
+    .notice {
+      position: fixed;
+      left: 50%;
+      bottom: 24px;
+      z-index: 20;
+      max-width: min(560px, calc(100% - 32px));
+      padding: 13px 18px;
+      border-radius: 12px;
+      color: #fff;
+      background: #26364e;
+      box-shadow: 0 12px 30px rgba(12, 23, 39, .25);
+      opacity: 0;
+      pointer-events: none;
+      transform: translate(-50%, 14px);
+      transition: opacity .2s ease, transform .2s ease;
+    }
+    .notice.show { opacity: 1; transform: translate(-50%, 0); }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 900px) {
+      .topbar { flex-direction: column; }
+      .file-actions { justify-content: flex-start; min-width: 0; }
+      .workspace { grid-template-columns: 1fr; }
+      .side-panel { position: static; }
+      .status-panel { grid-template-columns: 1fr; }
+      .toolbar { align-items: flex-start; flex-direction: column; }
+      .side-panel { order: -1; }
+      .mobile-file-row { display: block; }
+    }
+
+    @media (max-width: 560px) {
+      .app-shell { width: min(100% - 20px, 1320px); padding-top: 18px; }
+      .file-actions, .file-actions .btn { width: 100%; }
+      .source-loader { grid-template-columns: 1fr; padding: 13px; }
+      .source-loader label, .source-loader .source-hint { grid-column: 1; }
+      .source-loader .btn { width: 100%; }
+      .filter-group { width: 100%; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 3px; }
+      .filter-btn { flex: 0 0 auto; min-height: 44px; }
+      .toolbar-right { width: 100%; justify-content: space-between; }
+      .counts { flex-wrap: nowrap; overflow-x: auto; }
+      .count-pill { flex: 0 0 auto; }
+      .question-top { align-items: flex-start; flex-direction: column; gap: 6px; }
+      .question-text { min-height: 0; font-size: clamp(22px, 7vw, 30px); }
+      .decision-area {
+        position: sticky;
+        bottom: max(8px, env(safe-area-inset-bottom));
+        z-index: 8;
+        grid-template-columns: 1fr 1fr;
+        padding: 8px;
+        margin: 20px -8px -8px;
+        border-radius: 18px;
+        background: rgba(255, 255, 255, .94);
+        box-shadow: 0 -8px 24px rgba(29, 48, 79, .12);
+        backdrop-filter: blur(10px);
+      }
+      .decision-btn { min-height: 66px; font-size: 16px; }
+      .question-card { min-height: 0; border-radius: 18px; }
+      .reason-box { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app-shell">
+    <header class="topbar">
+      <div>
+        <p class="eyebrow">10-question test mode</p>
+        <h1>퀴즈 문항 검토실</h1>
+        <p class="subtitle">현재는 CSV의 첫 10문항만 검토하는 테스트 모드입니다. 사용할 문제는 추천, 사용하지 않을 문제는 비추천으로 표시하세요.</p>
+      </div>
+      <div class="file-actions">
+        <button class="btn ghost" id="openButton" type="button">CSV 열기</button>
+        <label class="btn ghost" for="fileInput" style="display:inline-flex;align-items:center;justify-content:center">파일 선택</label>
+        <input class="sr-only" id="fileInput" type="file" accept=".csv,text/csv">
+        <button class="btn primary" id="saveButton" type="button" disabled>결과 CSV 저장</button>
+      </div>
+    </header>
+
+    <section class="source-loader" aria-label="CSV 주소 불러오기">
+      <label for="csvUrlInput">공개 CSV 주소</label>
+      <input id="csvUrlInput" type="text" inputmode="url" value="https://heris25.github.io/CraftsmanElectricity_privacy/opentdb_questions.csv" placeholder="https://example.com/opentdb_questions.csv" autocomplete="url">
+      <button class="btn primary" id="loadUrlButton" type="button">주소에서 불러오기</button>
+      <div class="mobile-file-row">
+        <label class="btn ghost" for="mobileFileInput">휴대폰 파일에서 CSV 불러오기</label>
+        <input class="sr-only" id="mobileFileInput" type="file" accept=".csv,text/csv,text/comma-separated-values,application/vnd.ms-excel">
+      </div>
+      <p class="source-hint">GitHub Pages에서는 같은 폴더의 <strong>./opentdb_questions.csv</strong>를 사용하거나, CORS가 허용된 공개 CSV 주소를 입력하세요. URL의 <strong>?csv=주소</strong> 파라미터도 지원합니다.</p>
+    </section>
+
+    <section class="status-panel" aria-label="검토 진행 상황">
+      <div>
+        <div class="progress-head">
+          <span id="fileName">opentdb_questions.csv 불러오는 중</span>
+          <span id="progressText">0 / 0 완료</span>
+        </div>
+        <div class="progress-track" aria-hidden="true"><div class="progress-bar" id="progressBar"></div></div>
+      </div>
+      <div class="counts">
+        <span class="count-pill agree" id="agreeCount">추천 0</span>
+        <span class="count-pill disagree" id="disagreeCount">비추천 0</span>
+        <span class="count-pill" id="pendingCount">미검토 0</span>
+      </div>
+    </section>
+
+    <div class="toolbar">
+      <div class="filter-group" aria-label="문항 필터">
+        <button class="filter-btn active" type="button" data-filter="all">전체</button>
+        <button class="filter-btn" type="button" data-filter="pending">미검토</button>
+        <button class="filter-btn" type="button" data-filter="agree">추천</button>
+        <button class="filter-btn" type="button" data-filter="disagree">비추천</button>
+      </div>
+      <div class="toolbar-right">
+        <label class="auto-next"><input id="autoNext" type="checkbox" checked> 선택 후 다음 문항</label>
+        <button class="btn" id="clearButton" type="button" disabled>현재 선택 취소</button>
+      </div>
+    </div>
+
+    <div class="workspace">
+      <section class="question-card" id="questionCard" aria-live="polite">
+        <div class="empty-state">
+          <div>
+            <h2>CSV를 준비하고 있습니다</h2>
+            <p>같은 폴더의 파일을 자동으로 불러오지 못하면 상단의 <strong>CSV 열기</strong> 또는 <strong>파일 선택</strong>을 이용해 주세요.</p>
+          </div>
+        </div>
+      </section>
+
+      <aside class="side-panel">
+        <h2>문항 이동</h2>
+        <form class="jump-form" id="jumpForm">
+          <label class="sr-only" for="jumpInput">이동할 문항 번호</label>
+          <input id="jumpInput" type="number" min="1" placeholder="1~1000">
+          <button class="btn" type="submit">이동</button>
+        </form>
+        <div class="nav-row">
+          <button class="btn" id="prevButton" type="button" disabled>← 이전</button>
+          <button class="btn" id="nextButton" type="button" disabled>다음 →</button>
+        </div>
+        <div class="key-help">
+          <div><kbd>R</kbd> 추천(사용)</div>
+          <div><kbd>X</kbd> 비추천(미사용)</div>
+          <div><kbd>←</kbd> <kbd>→</kbd> 문항 이동</div>
+          <div><kbd>Esc</kbd> 현재 선택 취소</div>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <div class="notice" id="notice" role="status" aria-live="polite"></div>
+
+  <script>
+    "use strict";
+
+    const RESULT_COLUMN = "검토_결과";
+    const MATCH_COLUMN = "추천_일치여부";
+    const TEST_LIMIT = 10;
+    const DEFAULT_CSV_URL = "https://heris25.github.io/CraftsmanElectricity_privacy/opentdb_questions.csv";
+    const REQUIRED_COLUMNS = ["번역", "Type", "Category", "Difficulty", "한국인_적합도", "분류_이유", "출제_추천"];
+    const state = {
+      headers: [],
+      rows: [],
+      decisions: [],
+      fileName: "opentdb_questions.csv",
+      fileHandle: null,
+      fingerprint: "",
+      filter: "all",
+      visibleIndices: [],
+      currentIndex: 0,
+    };
+
+    const el = Object.fromEntries([
+      "openButton", "fileInput", "saveButton", "clearButton", "fileName", "progressText", "progressBar",
+      "agreeCount", "disagreeCount", "pendingCount", "questionCard", "prevButton", "nextButton",
+      "jumpForm", "jumpInput", "autoNext", "notice", "csvUrlInput", "loadUrlButton", "mobileFileInput"
+    ].map((id) => [id, document.getElementById(id)]));
+
+    function parseCSV(text) {
+      const clean = text.replace(/^\uFEFF/, "");
+      const rows = [];
+      let row = [];
+      let field = "";
+      let quoted = false;
+
+      for (let i = 0; i < clean.length; i += 1) {
+        const char = clean[i];
+        if (quoted) {
+          if (char === '"' && clean[i + 1] === '"') {
+            field += '"';
+            i += 1;
+          } else if (char === '"') {
+            quoted = false;
+          } else {
+            field += char;
+          }
+        } else if (char === '"') {
+          quoted = true;
+        } else if (char === ",") {
+          row.push(field);
+          field = "";
+        } else if (char === "\n") {
+          row.push(field.replace(/\r$/, ""));
+          if (row.some((value) => value !== "")) rows.push(row);
+          row = [];
+          field = "";
+        } else {
+          field += char;
+        }
+      }
+
+      if (quoted) throw new Error("닫히지 않은 큰따옴표가 있습니다.");
+      if (field !== "" || row.length) {
+        row.push(field.replace(/\r$/, ""));
+        if (row.some((value) => value !== "")) rows.push(row);
+      }
+      if (rows.length < 2) throw new Error("CSV에 문항 데이터가 없습니다.");
+      return rows;
+    }
+
+    function csvEscape(value) {
+      const text = String(value ?? "");
+      return /[",\r\n]/.test(text) ? `"${text.replaceAll('"', '""')}"` : text;
+    }
+
+    function buildCSV() {
+      const baseHeaderIndices = state.headers
+        .map((name, index) => ({ name, index }))
+        .filter(({ name }) => ![RESULT_COLUMN, MATCH_COLUMN].includes(name));
+      const recommendationIndex = state.headers.indexOf("출제_추천");
+      const outputHeaders = [...baseHeaderIndices.map(({ name }) => name), RESULT_COLUMN, MATCH_COLUMN];
+      const outputRows = state.rows.map((row, rowIndex) => [
+        ...baseHeaderIndices.map(({ index }) => row[index] ?? ""),
+        state.decisions[rowIndex] || "",
+        getMatchMark(state.decisions[rowIndex], recommendationIndex >= 0 ? row[recommendationIndex] : ""),
+      ]);
+      return "\uFEFF" + [outputHeaders, ...outputRows].map((row) => row.map(csvEscape).join(",")).join("\r\n") + "\r\n";
+    }
+
+    function hashDataset(headers, rows) {
+      const sample = `${headers.join("|")}::${rows.length}::${rows[0]?.join("|") || ""}::${rows.at(-1)?.join("|") || ""}`;
+      let hash = 2166136261;
+      for (let i = 0; i < sample.length; i += 1) {
+        hash ^= sample.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+      }
+      return `quiz-review-${(hash >>> 0).toString(16)}`;
+    }
+
+    function getValue(rowIndex, columnName) {
+      const columnIndex = state.headers.indexOf(columnName);
+      return columnIndex >= 0 ? (state.rows[rowIndex][columnIndex] || "") : "";
+    }
+
+    function loadPersistedDecisions() {
+      const normalizeDecision = (value) => {
+        if (value === "동의") return "추천";
+        if (value === "비동의") return "비추천";
+        return ["추천", "비추천"].includes(value) ? value : "";
+      };
+      try {
+        const saved = JSON.parse(localStorage.getItem(state.fingerprint) || "null");
+        if (Array.isArray(saved) && saved.length === state.rows.length) return saved.map(normalizeDecision);
+      } catch (error) {
+        console.warn("저장된 검토 상태를 읽지 못했습니다.", error);
+      }
+      const existingIndex = state.headers.indexOf(RESULT_COLUMN);
+      if (existingIndex >= 0) {
+        return state.rows.map((row) => normalizeDecision(row[existingIndex]));
+      }
+      return Array(state.rows.length).fill("");
+    }
+
+    function persistDecisions() {
+      try { localStorage.setItem(state.fingerprint, JSON.stringify(state.decisions)); }
+      catch (error) { console.warn("검토 상태를 자동 저장하지 못했습니다.", error); }
+    }
+
+    function validateColumns(headers) {
+      const missing = REQUIRED_COLUMNS.filter((name) => !headers.includes(name));
+      if (missing.length) throw new Error(`필수 컬럼이 없습니다: ${missing.join(", ")}`);
+    }
+
+    async function loadCSVText(text, fileName, fileHandle = null) {
+      const matrix = parseCSV(text);
+      const headers = matrix[0].map((value) => value.trim());
+      validateColumns(headers);
+
+      state.headers = headers;
+      state.rows = matrix.slice(1, TEST_LIMIT + 1).map((row) => [...row, ...Array(Math.max(0, headers.length - row.length)).fill("")]);
+      state.fileName = fileName || "opentdb_questions.csv";
+      state.fileHandle = fileHandle;
+      state.fingerprint = hashDataset(headers, state.rows);
+      state.decisions = loadPersistedDecisions();
+      state.currentIndex = 0;
+      state.filter = "all";
+      document.querySelectorAll(".filter-btn").forEach((button) => button.classList.toggle("active", button.dataset.filter === "all"));
+      el.fileName.textContent = `${state.fileName} · 테스트 ${state.rows.length.toLocaleString("ko-KR")}문항`;
+      el.jumpInput.max = String(state.rows.length);
+      el.jumpInput.placeholder = `1~${state.rows.length}`;
+      el.saveButton.disabled = false;
+      applyFilter(false);
+      updateSummary();
+      showNotice(`테스트용 첫 ${state.rows.length.toLocaleString("ko-KR")}개 문항을 불러왔습니다.`);
+    }
+
+    async function loadCSVFromUrl(inputUrl) {
+      const trimmed = String(inputUrl || "").trim();
+      if (!trimmed) throw new Error("CSV 주소를 입력해 주세요.");
+      const resolvedUrl = new URL(trimmed, window.location.href);
+      const response = await fetch(resolvedUrl.href, { cache: "no-store" });
+      if (!response.ok) throw new Error(`CSV 요청 실패: HTTP ${response.status}`);
+      const pathName = decodeURIComponent(resolvedUrl.pathname.split("/").pop() || "opentdb_questions.csv");
+      await loadCSVText(await response.text(), pathName);
+    }
+
+    async function openWithPicker() {
+      if (!("showOpenFilePicker" in window)) {
+        el.fileInput.click();
+        return;
+      }
+      try {
+        const [handle] = await window.showOpenFilePicker({
+          types: [{ description: "CSV 파일", accept: { "text/csv": [".csv"] } }],
+          multiple: false,
+        });
+        const file = await handle.getFile();
+        await loadCSVText(await file.text(), file.name, handle);
+      } catch (error) {
+        if (error.name !== "AbortError") showNotice(`파일을 열지 못했습니다: ${error.message}`);
+      }
+    }
+
+    function currentVisiblePosition() {
+      return state.visibleIndices.indexOf(state.currentIndex);
+    }
+
+    function applyFilter(keepCurrent = true) {
+      const previousIndex = state.currentIndex;
+      state.visibleIndices = state.rows.map((_, index) => index).filter((index) => {
+        const decision = state.decisions[index];
+        if (state.filter === "pending") return !decision;
+        if (state.filter === "agree") return decision === "추천";
+        if (state.filter === "disagree") return decision === "비추천";
+        return true;
+      });
+
+      if (keepCurrent && state.visibleIndices.includes(previousIndex)) state.currentIndex = previousIndex;
+      else state.currentIndex = state.visibleIndices[0] ?? -1;
+      renderQuestion();
+    }
+
+    function escapeHTML(value) {
+      return String(value ?? "").replace(/[&<>'"]/g, (character) => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;"
+      })[character]);
+    }
+
+    function getRecommendationReason(rowIndex) {
+      const recommendation = getValue(rowIndex, "출제_추천");
+      const fit = getValue(rowIndex, "한국인_적합도");
+      const classificationReason = getValue(rowIndex, "분류_이유");
+
+      if (recommendation === "추천") {
+        return "한국 일반 성인 대상 퀴즈에 바로 사용하기 적합한 문항입니다.";
+      }
+      if (recommendation === "조건부") {
+        if (fit === "전문/마니아") return "종합 퀴즈보다는 해당 분야의 주제형 퀴즈에서 제한적으로 사용할 수 있습니다.";
+        if (fit === "해외특화") return "한국 일반 대상보다는 해외 문화·지역 지식 주제에서 제한적으로 사용할 수 있습니다.";
+        return "난도와 문항 표현을 한 번 더 확인한 뒤 사용하는 것이 좋습니다.";
+      }
+      if (fit === "해외특화") return "한국 일반 성인에게 지나치게 지역적인 지식이므로 사용하지 않는 편이 좋습니다.";
+      if (fit === "전문/마니아") return "세부 전문지식 의존도가 높아 일반 대상 퀴즈에는 사용하지 않는 편이 좋습니다.";
+      if (classificationReason.includes("시점")) return "정답이 시점에 따라 달라질 수 있어 기준을 보완하기 전에는 사용하지 않는 편이 좋습니다.";
+      return "난도·맥락·표현을 보완하기 전에는 그대로 사용하지 않는 편이 좋습니다.";
+    }
+
+    function getMatchMark(userDecision, assistantRecommendation) {
+      if (!["추천", "비추천"].includes(userDecision)) return "";
+      const assistantWouldUse = ["추천", "조건부"].includes(assistantRecommendation);
+      const userWouldUse = userDecision === "추천";
+      return assistantWouldUse === userWouldUse ? "O" : "X";
+    }
+
+    function renderQuestion() {
+      if (!state.rows.length || state.currentIndex < 0) {
+        const message = state.rows.length ? "현재 필터에 해당하는 문항이 없습니다." : "CSV 파일을 불러와 주세요.";
+        el.questionCard.innerHTML = `<div class="empty-state"><div><h2>${message}</h2><p>상단의 필터를 바꾸거나 CSV 파일을 다시 선택할 수 있습니다.</p></div></div>`;
+        el.prevButton.disabled = true;
+        el.nextButton.disabled = true;
+        el.clearButton.disabled = true;
+        return;
+      }
+
+      const index = state.currentIndex;
+      const decision = state.decisions[index];
+      const position = currentVisiblePosition();
+      const sourceNumber = index + 1;
+      const id = getValue(index, "ID");
+      const question = getValue(index, "번역");
+      const type = getValue(index, "Type");
+      const category = getValue(index, "Category");
+      const difficulty = getValue(index, "Difficulty");
+      const fit = getValue(index, "한국인_적합도");
+      const reason = getValue(index, "분류_이유");
+      const recommendation = getValue(index, "출제_추천");
+      const recommendationReason = getRecommendationReason(index);
+      const recommendationClass = recommendation === "추천" ? "use" : recommendation === "비추천" ? "skip" : "";
+      const matchMark = getMatchMark(decision, recommendation);
+      const matchChip = matchMark ? `<span class="chip match-${matchMark.toLowerCase()}">추천 일치 · ${matchMark}</span>` : "";
+
+      el.questionCard.innerHTML = `
+        <div class="question-top">
+          <div class="question-number">문항 ${sourceNumber.toLocaleString("ko-KR")} / ${state.rows.length.toLocaleString("ko-KR")}</div>
+          <div class="row-id">ID ${escapeHTML(id || "-")}</div>
+        </div>
+        <div class="chips">
+          <span class="chip">타입 · ${escapeHTML(type || "-")}</span>
+          <span class="chip">카탈로그(카테고리) · ${escapeHTML(category || "-")}</span>
+          <span class="chip">어려움 · ${escapeHTML(difficulty || "-")}</span>
+          <span class="chip fit">한국인 적합도 · ${escapeHTML(fit || "-")}</span>
+          <span class="chip recommend">출제 추천 · ${escapeHTML(recommendation || "-")}</span>
+          ${matchChip}
+        </div>
+        <p class="question-label">번역된 문제</p>
+        <h2 class="question-text">${escapeHTML(question || "번역 문항이 비어 있습니다.")}</h2>
+        <div class="reason-box recommendation ${recommendationClass}"><strong>출제 추천 이유</strong><span>${escapeHTML(recommendationReason)}</span></div>
+        <div class="reason-box"><strong>분류 이유</strong><span>${escapeHTML(reason || "분류 이유가 없습니다.")}</span></div>
+        <div class="decision-area" aria-label="검토 결과 선택">
+          <button class="decision-btn agree ${decision === "추천" ? "selected" : ""}" type="button" data-decision="추천" aria-pressed="${decision === "추천"}">추천 · 사용<span class="shortcut">R 키</span></button>
+          <button class="decision-btn disagree ${decision === "비추천" ? "selected" : ""}" type="button" data-decision="비추천" aria-pressed="${decision === "비추천"}">비추천 · 미사용<span class="shortcut">X 키</span></button>
+        </div>`;
+
+      el.questionCard.querySelectorAll("[data-decision]").forEach((button) => {
+        button.addEventListener("click", () => setDecision(button.dataset.decision));
+      });
+      el.prevButton.disabled = position <= 0;
+      el.nextButton.disabled = position < 0 || position >= state.visibleIndices.length - 1;
+      el.clearButton.disabled = !decision;
+    }
+
+    function updateSummary() {
+      const agree = state.decisions.filter((value) => value === "추천").length;
+      const disagree = state.decisions.filter((value) => value === "비추천").length;
+      const completed = agree + disagree;
+      const total = state.rows.length;
+      const pending = total - completed;
+      el.progressText.textContent = `${completed.toLocaleString("ko-KR")} / ${total.toLocaleString("ko-KR")} 완료`;
+      el.progressBar.style.width = total ? `${(completed / total) * 100}%` : "0%";
+      el.agreeCount.textContent = `추천 ${agree.toLocaleString("ko-KR")}`;
+      el.disagreeCount.textContent = `비추천 ${disagree.toLocaleString("ko-KR")}`;
+      el.pendingCount.textContent = `미검토 ${pending.toLocaleString("ko-KR")}`;
+    }
+
+    function setDecision(decision) {
+      if (state.currentIndex < 0) return;
+      const reviewedIndex = state.currentIndex;
+      state.decisions[reviewedIndex] = decision;
+      persistDecisions();
+      updateSummary();
+
+      if (el.autoNext.checked) {
+        if (state.filter === "pending") {
+          applyFilter(false);
+          if (state.currentIndex < 0) showNotice("미검토 문항을 모두 완료했습니다.");
+        } else {
+          const position = state.visibleIndices.indexOf(reviewedIndex);
+          state.currentIndex = state.visibleIndices[Math.min(position + 1, state.visibleIndices.length - 1)] ?? reviewedIndex;
+          renderQuestion();
+        }
+      } else {
+        if (state.filter !== "all") applyFilter(true);
+        else renderQuestion();
+      }
+    }
+
+    function clearDecision() {
+      if (state.currentIndex < 0) return;
+      state.decisions[state.currentIndex] = "";
+      persistDecisions();
+      updateSummary();
+      if (state.filter !== "all") applyFilter(false);
+      else renderQuestion();
+    }
+
+    function move(delta) {
+      const position = currentVisiblePosition();
+      const nextPosition = Math.max(0, Math.min(state.visibleIndices.length - 1, position + delta));
+      if (state.visibleIndices[nextPosition] !== undefined) {
+        state.currentIndex = state.visibleIndices[nextPosition];
+        renderQuestion();
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      }
+    }
+
+    function jumpTo(number) {
+      const index = Number(number) - 1;
+      if (!Number.isInteger(index) || index < 0 || index >= state.rows.length) {
+        showNotice(`1부터 ${state.rows.length} 사이의 번호를 입력해 주세요.`);
+        return;
+      }
+      if (!state.visibleIndices.includes(index)) {
+        state.filter = "all";
+        document.querySelectorAll(".filter-btn").forEach((button) => button.classList.toggle("active", button.dataset.filter === "all"));
+        state.visibleIndices = state.rows.map((_, rowIndex) => rowIndex);
+      }
+      state.currentIndex = index;
+      renderQuestion();
+    }
+
+    async function saveCSV() {
+      if (!state.rows.length) return;
+      const pending = state.decisions.filter((value) => !value).length;
+      if (pending && !window.confirm(`아직 ${pending.toLocaleString("ko-KR")}개 문항이 미검토 상태입니다. 빈 값으로 저장할까요?`)) return;
+
+      const content = buildCSV();
+      const now = new Date();
+      const timestamp = [
+        now.getFullYear(),
+        String(now.getMonth() + 1).padStart(2, "0"),
+        String(now.getDate()).padStart(2, "0"),
+        "_",
+        String(now.getHours()).padStart(2, "0"),
+        String(now.getMinutes()).padStart(2, "0"),
+        String(now.getSeconds()).padStart(2, "0"),
+      ].join("");
+      const safeBaseName = state.fileName.replace(/\.csv$/i, "").replace(/[^0-9A-Za-z가-힣_-]+/g, "_") || "quiz_results";
+      const suggestedName = `${timestamp}_${safeBaseName}_reviewed_test${state.rows.length}.csv`;
+
+      const blob = new Blob([content], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = suggestedName;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      showNotice(`${suggestedName} 파일로 다운로드했습니다.`);
+    }
+
+    let noticeTimer;
+    function showNotice(message) {
+      clearTimeout(noticeTimer);
+      el.notice.textContent = message;
+      el.notice.classList.add("show");
+      noticeTimer = setTimeout(() => el.notice.classList.remove("show"), 2800);
+    }
+
+    el.openButton.addEventListener("click", openWithPicker);
+    el.loadUrlButton.addEventListener("click", async () => {
+      el.loadUrlButton.disabled = true;
+      try { await loadCSVFromUrl(el.csvUrlInput.value); }
+      catch (error) { showNotice(`CSV를 불러오지 못했습니다: ${error.message}`); }
+      finally { el.loadUrlButton.disabled = false; }
+    });
+    el.csvUrlInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") { event.preventDefault(); el.loadUrlButton.click(); }
+    });
+    async function loadFromFileInput(input) {
+      const file = input.files?.[0];
+      if (!file) return;
+      try { await loadCSVText(await file.text(), file.name); }
+      catch (error) { showNotice(`CSV를 읽지 못했습니다: ${error.message}`); }
+      finally { input.value = ""; }
+    }
+    el.fileInput.addEventListener("change", () => loadFromFileInput(el.fileInput));
+    el.mobileFileInput.addEventListener("change", () => loadFromFileInput(el.mobileFileInput));
+    el.saveButton.addEventListener("click", saveCSV);
+    el.clearButton.addEventListener("click", clearDecision);
+    el.prevButton.addEventListener("click", () => move(-1));
+    el.nextButton.addEventListener("click", () => move(1));
+    el.jumpForm.addEventListener("submit", (event) => { event.preventDefault(); jumpTo(el.jumpInput.value); });
+
+    document.querySelectorAll(".filter-btn").forEach((button) => {
+      button.addEventListener("click", () => {
+        state.filter = button.dataset.filter;
+        document.querySelectorAll(".filter-btn").forEach((item) => item.classList.toggle("active", item === button));
+        applyFilter(false);
+      });
+    });
+
+    document.addEventListener("keydown", (event) => {
+      if (["INPUT", "TEXTAREA", "SELECT"].includes(document.activeElement?.tagName)) return;
+      if (event.key.toLowerCase() === "r") setDecision("추천");
+      else if (event.key.toLowerCase() === "x") setDecision("비추천");
+      else if (event.key === "ArrowLeft") move(-1);
+      else if (event.key === "ArrowRight") move(1);
+      else if (event.key === "Escape") clearDecision();
+    });
+
+    (async function autoLoad() {
+      const queryUrl = new URLSearchParams(window.location.search).get("csv");
+      const initialUrl = queryUrl || DEFAULT_CSV_URL;
+      el.csvUrlInput.value = initialUrl;
+      try {
+        await loadCSVFromUrl(initialUrl);
+      } catch (error) {
+        el.fileName.textContent = "CSV 주소를 확인하거나 파일을 선택해 주세요";
+        console.info("CSV 자동 불러오기에 실패했습니다.", error);
+      }
+    })();
+  </script>
+</body>
+</html>
